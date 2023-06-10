@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -12,24 +21,21 @@ export class UsersController {
 
   @Get('/:id')
   async getUserInfo(@Param('id') userId: string): Promise<UserInfoDto> {
-    console.log(userId)
-    return;
+    return await this.getUserInfo(userId);
   }
 
   @Post()
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
-    console.log(dto);
+    this.usersService.createUser(dto);
   }
 
   @Post('/email-vertify')
   async vertifyEmail(@Query() dto: VertifyEmailDto): Promise<string> {
-    console.log(dto);
-    return;
+    return await this.usersService.verifyMail(dto);
   }
 
   @Post('/login')
   async login(@Body() dto: UserLoginDto): Promise<string> {
-    console.log(dto);
-    return;
+    return await this.usersService.login(dto);
   }
 }
