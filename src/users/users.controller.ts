@@ -26,7 +26,7 @@ export class UsersController {
 
   @Post()
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
-    this.usersService.createUser(dto);
+    return this.usersService.createUser(dto);
   }
 
   @Post('/email-vertify')
