@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   Query,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,8 +22,18 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('/:id')
-  async getUserInfo(@Param('id') userId: string): Promise<UserInfoDto> {
+  async getUserInfo(
+    @Param('id', ParseIntPipe) userId: number,
+  ): Promise<UserInfoDto> {
     return await this.getUserInfo(userId);
+  }
+
+  @Get()
+  async getAllUser(
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    console.log(offset, limit);
   }
 
   @Post()
