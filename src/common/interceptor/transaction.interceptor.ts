@@ -23,7 +23,6 @@ export class TransactionInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       catchError(async (e) => {
-        console.log(e)
         await queryRunner.rollbackTransaction();
         await queryRunner.release();
 
