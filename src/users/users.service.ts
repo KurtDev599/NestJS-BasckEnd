@@ -1,11 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EmailService } from 'src/email/email.service';
-import { Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import * as uuid from 'uuid';
 import { UserInfoDto } from './dto/user-info.dto';
 import { UserEntity } from './entities/user.entity';
 import { ulid } from 'ulid';
+import { InternalServerErrorException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
@@ -13,6 +14,7 @@ export class UsersService {
     private emailService: EmailService,
     @InjectRepository(UserEntity)
     private usersRepository: Repository<UserEntity>,
+    private dataSource: DataSource
   ) {}
   async createUser({ name, email, password }) {
     await this.checkUserExitss(email);
@@ -30,10 +32,7 @@ export class UsersService {
       },
     });
     if (user) {
-      throw new HttpException(
-        '중복된 이메일 입니다.',
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new HttpException('중복된 이메일 입니다.', HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -43,13 +42,15 @@ export class UsersService {
     password: string,
     signupVertifyToken: string,
   ) {
-    const user = new UserEntity();
-    user.id = ulid()
-    user.name = name;
-    user.email = email;
-    user.password = password;
-    user.signupVertifyToken = signupVertifyToken;
-    await this.usersRepository.save(user);
+    await this.dataSource.transaction(async manager => {
+      const user = new UserEntity();
+      user.id = ulid()
+      user.name = name;
+      user.email = email;
+      user.password = password;
+      user.signupVertifyToken = signupVertifyToken;
+      await manager.save(user);
+    })
   }
 
   async sendMemberJoinEmail(email: string, signupVertifyToken: string) {

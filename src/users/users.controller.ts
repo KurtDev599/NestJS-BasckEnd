@@ -9,6 +9,7 @@ import {
   Query,
   ParseIntPipe,
   DefaultValuePipe,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,6 +17,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { VertifyEmailDto } from './dto/vertify-email.dto';
 import { UserLoginDto } from './dto/user-login.dto';
 import { UserInfoDto } from './dto/user-info.dto';
+import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
+import { TransactionManager } from 'src/common/decorator/transaction.manager';
+import { EntityManager } from 'typeorm';
 
 @Controller('users')
 export class UsersController {
@@ -37,7 +41,9 @@ export class UsersController {
   }
 
   @Post()
-  async createUser(@Body() dto: CreateUserDto): Promise<void> {
+  async createUser(
+    @Body() dto: CreateUserDto,
+  ): Promise<void> {
     return this.usersService.createUser(dto);
   }
 

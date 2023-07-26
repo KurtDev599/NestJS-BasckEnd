@@ -5,7 +5,7 @@ import { UsersModule } from './users/users.module';
 import { EmailService } from './email/email.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import DatabaseLogger from './logger/DatabaseLogger';
+import DatabaseLogger from './common/logger/DatabaseLogger';
 
 @Module({
   imports: [
