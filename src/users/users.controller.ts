@@ -13,23 +13,26 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { VertifyEmailDto } from './dto/vertify-email.dto';
 import { UserLoginDto } from './dto/user-login.dto';
 import { UserInfoDto } from './dto/user-info.dto';
-import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
-import { TransactionManager } from 'src/common/decorator/transaction.manager';
-import { EntityManager } from 'typeorm';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { SuccessInterceptor } from 'src/common/interceptor/success.interceptor';
+import { Serialize } from 'src/common/interceptor/serialize.interceptor';
 
+@UseInterceptors(SuccessInterceptor) // Interceptor DI
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('/:id')
+  @UseGuards(AuthGuard('jwt'))
+  @Serialize(UserInfoDto)
   async getUserInfo(
-    @Param('id', ParseIntPipe) userId: number,
+    @Param('id') userId: string,
   ): Promise<UserInfoDto> {
-    return await this.getUserInfo(userId);
+    return await this.usersService.getUserInfo({ userId });
   }
 
   @Get()
@@ -41,9 +44,7 @@ export class UsersController {
   }
 
   @Post()
-  async createUser(
-    @Body() dto: CreateUserDto,
-  ): Promise<void> {
+  async createUser(@Body() dto: CreateUserDto): Promise<void> {
     return this.usersService.createUser(dto);
   }
 
@@ -53,7 +54,7 @@ export class UsersController {
   }
 
   @Post('/login')
-  async login(@Body() dto: UserLoginDto): Promise<string> {
+  async login(@Body() dto: UserLoginDto): Promise<{ accessToken: string }> {
     return await this.usersService.login(dto);
   }
 }

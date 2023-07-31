@@ -1,20 +1,27 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EmailService } from 'src/email/email.service';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import * as uuid from 'uuid';
 import { UserInfoDto } from './dto/user-info.dto';
 import { UserEntity } from './entities/user.entity';
 import { ulid } from 'ulid';
-import { InternalServerErrorException } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
   constructor(
     private emailService: EmailService,
+    private jwtService: JwtService,
     @InjectRepository(UserEntity)
     private usersRepository: Repository<UserEntity>,
-    private dataSource: DataSource
+    private dataSource: DataSource,
   ) {}
   async createUser({ name, email, password }) {
     await this.checkUserExitss(email);
@@ -42,15 +49,17 @@ export class UsersService {
     password: string,
     signupVertifyToken: string,
   ) {
-    await this.dataSource.transaction(async manager => {
+    await this.dataSource.transaction(async (manager) => {
       const user = new UserEntity();
-      user.id = ulid()
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(password, salt);
+      user.id = ulid();
       user.name = name;
       user.email = email;
-      user.password = password;
+      user.password = hashedPassword;
       user.signupVertifyToken = signupVertifyToken;
       await manager.save(user);
-    })
+    });
   }
 
   async sendMemberJoinEmail(email: string, signupVertifyToken: string) {
@@ -64,11 +73,30 @@ export class UsersService {
     throw new Error('Method not implemented');
   }
 
-  async login({ email, password }): Promise<string> {
-    throw new Error('Method not implemented');
+  async login({ email, password }): Promise<{ accessToken: string }> {
+    const user = await this.usersRepository.findOne({
+      where: {
+        email,
+      },
+    });
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+      const payload = { email };
+      const accessToken = await this.jwtService.sign(payload);
+
+      return { accessToken };
+    } else {
+      throw new UnauthorizedException('로그인 실패');
+    }
   }
 
-  async getUserInfo({ userId: string }): Promise<UserInfoDto> {
-    throw new Error('Method not implemented');
+  async getUserInfo({ userId }): Promise<UserInfoDto> {
+    const user = this.usersRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+
+    return user;
   }
 }
