@@ -6,6 +6,7 @@ import { EmailService } from './email/email.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import DatabaseLogger from './common/logger/DatabaseLogger';
+import { LoggingModule } from './common/logger/LoggingModule';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import DatabaseLogger from './common/logger/DatabaseLogger';
       synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
       logger: new DatabaseLogger(),
     }),
+    LoggingModule,
   ],
   controllers: [AppController],
   providers: [AppService, EmailService],

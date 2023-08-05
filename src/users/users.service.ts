@@ -13,6 +13,7 @@ import { UserEntity } from './entities/user.entity';
 import { ulid } from 'ulid';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
+import { InternalServerErrorException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
